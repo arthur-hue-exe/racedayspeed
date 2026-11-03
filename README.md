@@ -80,11 +80,13 @@ npm run db:seed -- --reset-admin
 | `ADMIN_PASSWORD` | Seed | Senha do administrador inicial. |
 | `NEXT_PUBLIC_SUPABASE_URL` | Sim | URL do projeto Supabase. Valor público. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sim | Chave publicável do Supabase. Valor público, seguro no browser. |
-| `SUPABASE_URL` | Não | URL do projeto para upload no servidor. Usa `NEXT_PUBLIC_SUPABASE_URL` como fallback. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Produção | Secret/service role key usada apenas no servidor para upload. **Nunca exponha no frontend.** |
+| `SUPABASE_URL` | Não | URL do projeto para uso no servidor. Usa `NEXT_PUBLIC_SUPABASE_URL` como fallback. |
+| `SUPABASE_PUBLISHABLE_KEY` | Não | Chave publicável para uso no servidor. Usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` como fallback. |
+| `SUPABASE_SECRET_KEY` | Produção | Secret key (`sb_secret_...`) usada apenas no servidor para upload no Storage. **Nunca exponha no frontend.** |
+| `SUPABASE_SERVICE_ROLE_KEY` | Não | Alias legado aceito pelo código (service role key do projeto). |
 | `SUPABASE_STORAGE_BUCKET` | Não | Bucket de imagens. Padrão: `product-images`. |
 
-`DATABASE_URL`, `ADMIN_PASSWORD` e `SUPABASE_SERVICE_ROLE_KEY` são lidas apenas no servidor. As variáveis `NEXT_PUBLIC_*` são públicas por definição e contêm apenas a chave publicável.
+`DATABASE_URL`, `ADMIN_PASSWORD`, `SUPABASE_SECRET_KEY` e `SUPABASE_SERVICE_ROLE_KEY` são lidas apenas no servidor. As variáveis `NEXT_PUBLIC_*` são públicas por definição e contêm apenas a chave publicável.
 
 ## Conectar ao seu projeto Supabase
 
@@ -107,10 +109,10 @@ O projeto já está preparado para o Supabase: os helpers SSR estão em `utils/s
 
    As migrações são idempotentes e controladas por `schema_migrations`. Em um banco vazio, elas criam as tabelas de produtos, tamanhos, pedidos, itens, categorias, configurações, administradores e sessões.
 
-3. **Storage** — crie um bucket **público** chamado `product-images` em **Storage** (ou defina outro nome em `SUPABASE_STORAGE_BUCKET`). O upload no painel exige a secret/service role key:
+3. **Storage** — crie um bucket **público** chamado `product-images` em **Storage** (ou defina outro nome em `SUPABASE_STORAGE_BUCKET`). O upload no painel exige a secret key:
 
    ```env
-   SUPABASE_SERVICE_ROLE_KEY="sb_secret_..." # ou a service_role key do projeto
+   SUPABASE_SECRET_KEY="sb_secret_..."
    ```
 
    A chave publicável (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) é exposta ao browser e serve para Auth/PostgREST com RLS; ela não autoriza upload de arquivos. Sem a secret key, o upload funciona apenas localmente em `public/uploads`.

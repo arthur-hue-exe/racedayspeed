@@ -15,7 +15,9 @@ const ALLOWED_TYPES: Record<string, string> = {
 
 function supabaseConfig() {
   const url = process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const key =
+    process.env.SUPABASE_SECRET_KEY?.trim() ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const bucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "product-images";
   if (!url || !key) return null;
   return { url, key, bucket };
@@ -55,7 +57,7 @@ export async function uploadProductImage(file: File): Promise<string> {
 
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "Supabase Storage não está configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY para enviar imagens em produção.",
+      "Supabase Storage não está configurado. Defina SUPABASE_URL e SUPABASE_SECRET_KEY para enviar imagens em produção.",
     );
   }
 

@@ -93,7 +93,7 @@ O prazo de análise e de estorno depende da forma de pagamento e será informado
 6. COMO SOLICITAR
 Envie uma mensagem para (61) 98281-7033 com: número do pedido, nome completo e o motivo da solicitação. Guarde o comprovante de envio até a conclusão do atendimento.`;
 
-const defaultSettings = {
+export const defaultSettings = {
   store: {
     whatsappNumber: "5561982817033",
     whatsappDisplay: "(61) 98281-7033",

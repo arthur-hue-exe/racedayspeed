@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+*.tsbuildinfo
+.env*.local
+.env
+.pgdata
+_raw_images
+_contato.pdf
+_contato.png
+_cards.png
+test-results
+playwright-report
+public/uploads/*
+!public/uploads/.gitkeep
+catalogo.txt

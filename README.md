@@ -78,30 +78,50 @@ npm run db:seed -- --reset-admin
 | `NEXT_PUBLIC_SITE_URL` | Sim | URL pública do site (SEO, sitemap, Open Graph e links de pedido). |
 | `ADMIN_EMAIL` | Seed | E-mail do administrador inicial. |
 | `ADMIN_PASSWORD` | Seed | Senha do administrador inicial. |
-| `SUPABASE_URL` | Produção | URL do projeto Supabase (upload de imagens). |
-| `SUPABASE_SERVICE_ROLE_KEY` | Produção | Service role key. **Somente no servidor** — nunca exponha no frontend. |
+| `NEXT_PUBLIC_SUPABASE_URL` | Sim | URL do projeto Supabase. Valor público. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sim | Chave publicável do Supabase. Valor público, seguro no browser. |
+| `SUPABASE_URL` | Não | URL do projeto para upload no servidor. Usa `NEXT_PUBLIC_SUPABASE_URL` como fallback. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Produção | Secret/service role key usada apenas no servidor para upload. **Nunca exponha no frontend.** |
 | `SUPABASE_STORAGE_BUCKET` | Não | Bucket de imagens. Padrão: `product-images`. |
 
-Todas as credenciais são lidas apenas no servidor. Nenhuma chave privada chega ao navegador.
+`DATABASE_URL`, `ADMIN_PASSWORD` e `SUPABASE_SERVICE_ROLE_KEY` são lidas apenas no servidor. As variáveis `NEXT_PUBLIC_*` são públicas por definição e contêm apenas a chave publicável.
 
-## Configuração do Supabase (produção)
+## Conectar ao seu projeto Supabase
 
-1. Crie um projeto no Supabase.
-2. Copie a **Connection string** (pooler, porta 6543) para `DATABASE_URL`.
-3. Aplique as migrações e o seed apontando para o banco de produção:
+O projeto já está preparado para o Supabase: os helpers SSR estão em `utils/supabase/` e o proxy em `proxy.ts`. A loja continua usando PostgreSQL via `pg` no servidor (transações de pedido e estoque) e o painel mantém a autenticação própria.
 
-   ```bash
-   DATABASE_URL="postgresql://..." npm run db:migrate
-   DATABASE_URL="postgresql://..." ADMIN_EMAIL="..." ADMIN_PASSWORD="..." npm run db:seed
+1. **Banco de dados** — no painel do Supabase, abra **Connect → Transaction pooler** e copie a URI com a senha do banco. Coloque em `DATABASE_URL` (somente no servidor):
+
+   ```env
+   DATABASE_URL="postgresql://postgres.SEU_PROJETO:SUA_SENHA@aws-0-SUA_REGIAO.pooler.supabase.com:6543/postgres?sslmode=require"
    ```
 
-   As migrações são idempotentes e controladas por `schema_migrations`.
+   A chave publicável **não** acessa o PostgreSQL e **não** cria tabelas. É necessário usar a URI de conexão (ou o SQL Editor) com a senha do banco.
 
-4. Crie um bucket **público** chamado `product-images` em **Storage** (ou defina outro nome em `SUPABASE_STORAGE_BUCKET`).
-5. Preencha `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no ambiente do deploy.
-6. Defina `NEXT_PUBLIC_SITE_URL` com o domínio final.
+2. **Criar o schema e o catálogo**:
+
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+   As migrações são idempotentes e controladas por `schema_migrations`. Em um banco vazio, elas criam as tabelas de produtos, tamanhos, pedidos, itens, categorias, configurações, administradores e sessões.
+
+3. **Storage** — crie um bucket **público** chamado `product-images` em **Storage** (ou defina outro nome em `SUPABASE_STORAGE_BUCKET`). O upload no painel exige a secret/service role key:
+
+   ```env
+   SUPABASE_SERVICE_ROLE_KEY="sb_secret_..." # ou a service_role key do projeto
+   ```
+
+   A chave publicável (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) é exposta ao browser e serve para Auth/PostgREST com RLS; ela não autoriza upload de arquivos. Sem a secret key, o upload funciona apenas localmente em `public/uploads`.
+
+4. **Deploy** — configure as mesmas variáveis no provedor, com `NEXT_PUBLIC_SITE_URL` apontando para o domínio final e `DATABASE_URL` do pooler.
 
 O `next.config.ts` já libera imagens públicas de `*.supabase.co`.
+
+### Sobre autenticação
+
+A autenticação do painel é própria (scrypt + sessão no banco + cookie `HttpOnly`) e não depende do Supabase Auth. Os helpers `utils/supabase/client.ts` e `utils/supabase/server.ts` ficam prontos para uso futuro; o `proxy.ts` só atua quando existe cookie de sessão do Supabase Auth, portanto não adiciona latência para visitantes da loja.
 
 ## Deploy
 

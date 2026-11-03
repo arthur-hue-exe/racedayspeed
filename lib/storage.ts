@@ -14,7 +14,7 @@ const ALLOWED_TYPES: Record<string, string> = {
 };
 
 function supabaseConfig() {
-  const url = process.env.SUPABASE_URL?.trim();
+  const url = process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const bucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || "product-images";
   if (!url || !key) return null;
